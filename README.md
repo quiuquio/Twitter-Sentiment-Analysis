@@ -7,7 +7,7 @@ The data-set is not inluded here but can be easily downloaded trough the [Sentip
 
 The resulting file `twitts.csv` should be saved inside the `data` folder for it to work.
 
-Tech:
+Tech
 -----
 - Python 3.4
 - NLTK (classifiers)
@@ -16,12 +16,12 @@ Tech:
 
 This work is still in its early stages. Many changes to come.
 
-Version:
+Version
 ----
 
 0.2 (Alpha)
 
-Credits:
+Credits
 --------
 This is a list of some people who made great code on SA available for all of us, to learn and use.
 I expect this to grow much, much bigger as I learn more.
@@ -32,7 +32,7 @@ I expect this to grow much, much bigger as I learn more.
 Licence
 -------
 
-**Free Software, Hell Yeah!**
+MIT
 
 [twitterdata]:http://www.di.unito.it/~tutreeb/sentipolc-evalita14/tweet.html#
 [1]:http://ravikiranj.net/drupal/content/whoami
