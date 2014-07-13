@@ -26,7 +26,8 @@ $RECYCLE.BIN/
 .LSOverride
 
 # Icon must ends with two \r.
-Icon
+Icon
+
 
 # Thumbnails
 ._*
@@ -40,4 +41,10 @@ out1.txt
 out2.txt
 out3.txt
 twitts.csv
-__pycache__/main.cpython-33.pyc
+*.pyc
+data/logs/out_badly_classfied.txt
+data/logs/out_feature_vector.txt
+data/logs/out_processedTweets.txt
+data/logs/out_twitts_features.txt
+*.pickle
+main.py
