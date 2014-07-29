@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
+from __future__ import division
+
 #import regex
 import re
 import csv
@@ -9,6 +11,9 @@ import pickle
 #import pprint
 import random
 import nltk.classify
+from sklearn.svm import LinearSVC
+from nltk.classify.scikitlearn import SklearnClassifier
+from sklearn.metrics import classification_report
 
 #start replaceTwoOrMore
 def replaceTwoOrMore(s):
@@ -93,7 +98,6 @@ def getFeatureVector(tweet, stopWords):
     for w in words:
         #replace two or more with two occurrences 
         w = replaceTwoOrMore(w) 
-        #check for emoticons
         #w = processEmoticons(w)
         #strip punctuation
         w = w.strip('\'"!?,.')
@@ -149,6 +153,9 @@ def writeTwittsFeatures(featureVector):
 
 #Write on badly classification file
 def writeMisclassfication(classifier, prediction, actual_sentiment, tweet):
+    prediction = ''.join(prediction)
+    actual_sentiment = ''.join(actual_sentiment)
+    tweet = ''.join(tweet)
     out4.write(prediction)
     out4.write(", ")
     out4.write(actual_sentiment)
@@ -182,7 +189,7 @@ def prepareDataFromTweets():
         featureVector = getFeatureVector(processedTweet, stopWords)
         featureList.extend(featureVector)
         tweets.append((featureVector, sentiment));
-        #tweets.append((featureVector, sentimentVector)); #we can use the sentiment vector too. It looks like this("1","1","0","0","0","0",)   
+        # tweets.append((featureVector, sentimentVector)); #we can use the sentiment vector too. It looks like this("1","1","0","0","0","0",)   
         #Write on output files
         writeProcessedTweets(processedTweet)
         writeTwittsFeatures(featureVector)
@@ -208,6 +215,9 @@ def trainClassifiers(tweets):
     f.close()
     print("NBClassifier Classifier Trained")
 
+    #Train linear SVC
+    linear_SVC_classifier = SklearnClassifier(LinearSVC())
+    linear_SVC_classifier.train(training_set)
 
     # Train Max Entropy Classifier
     # MaxEntClassifier = nltk.classify.maxent.MaxentClassifier.train(training_set, 'IIS', trace=2, \
@@ -218,7 +228,7 @@ def trainClassifiers(tweets):
     # print("MaxEntClassifier Classifier Trained")
 
     # return (training_set, NBClassifier, MaxEntClassifier)
-    return (training_set, NBClassifier)
+    return (training_set, NBClassifier, linear_SVC_classifier)
 
 def testClassifiers(testTweets):
     #Test NBClassifier
@@ -234,10 +244,37 @@ def testClassifiers(testTweets):
             writeMisclassfication("NBClassifier", sentiment, sent, tw)
             results["wrong"] += 1
     print(results)
-    total = results["correct"]+results["wrong"]
-    acuracy = (results["correct"]/total)*100
-    print("Acuracy of", acuracy,"%")
+    total = int(results["correct"])+int(results["wrong"])
+    acuracy = (int(results["correct"])/total)*100
     print(NBClassifier.show_most_informative_features(20))
+    print "Acuracy of NBClassifier: {0}%".format(acuracy)
+
+    #Test linear_SVC_classifier
+    results = {"correct": 0, "wrong": 0}
+    print("*"*10, "\n")
+    print("Now testing", len(testTweets), "tweets with linear_SVC_classifier")
+    # label set
+    cls_set = ['positive', 'negative', 'mixed', 'neutral']
+    test_skl = []
+    t_test_skl = []
+    for tw, sent in testTweets:
+        test_skl.append(tw)
+        t_test_skl.append(sent)
+        processedTestTweet = processTweet(tw)
+        sentiment = linear_SVC_classifier.classify(extract_features(getFeatureVector(processedTestTweet, stopWords)))
+        if sent == sentiment:
+            results["correct"] += 1
+        else:
+            writeMisclassfication("linear_SVC_classifier", sentiment, sent, tw)
+            results["wrong"] += 1
+    print(results)
+    total = int(results["correct"])+int(results["wrong"])
+    acuracy = (int(results["correct"])/total)*100
+    print "Acuracy of linear_SVC_classifier: {0}%".format(acuracy)
+    # getting a full report
+    # p = linear_SVC_classifier.batch_classify(test_skl)
+    # print classification_report(t_test_skl, p, labels=list(set(t_test_skl)),target_names=cls_set)
+    # print(linear_SVC_classifier.show_most_informative_features(20))
 
     #Test NBClassifier
     # results = {"correct": 0, "wrong": 0}
@@ -279,5 +316,5 @@ testTweets = []
 # main operations
 tweets, featureList = prepareDataFromTweets()
 # training_set, NBClassifier, MaxEntClassifier = trainClassifiers(tweets)
-training_set, NBClassifier = trainClassifiers(tweets)
+training_set, NBClassifier, linear_SVC_classifier = trainClassifiers(tweets)
 testClassifiers(testTweets)
